@@ -10,10 +10,17 @@ builder.Services.AddDbContext<Persistence.AppDbContext>(opt =>
 {
     opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.AddCors();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+
+app.UseCors(policy => policy
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    // include Vite dev server (default 5173) and CRA/other dev localhost:3000
+    .WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:5173", "https://localhost:5173"));
 
 app.MapControllers();
 
