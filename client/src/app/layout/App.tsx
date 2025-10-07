@@ -1,30 +1,20 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Activity } from "../../lib/types";
-import { Box, Container, CssBaseline } from "@mui/material";
-import axios from "axios";
+import { Box, Container, CssBaseline, Typography } from "@mui/material";
 import Navbar from "./Navbar";
 import ActivityDashboard from "../../features/activities/dashboard/ActivityDashboard";
+import { useActivities } from "../../lib/hooks/useActivities";
 
 function App() {
-  const [activities, setActivities] = useState<Activity[]>([]);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
     null
   );
   const [editMode, setEditMode] = useState(false);
 
-  useEffect(() => {
-    axios
-      .get<Activity[]>("https://localhost:5001/api/activities")
-      .then((response) => {
-        setActivities(response.data);
-      })
-      .catch((error) => console.log(error));
-
-    return () => {};
-  }, []);
+  const { activities, isPending } = useActivities();
 
   const handleSelectActivity = (id: string) => {
-    setSelectedActivity(activities.find((a) => a.id === id) || null);
+    setSelectedActivity(activities!.find((a) => a.id === id) || null);
   };
 
   const handleCancelSelectActivity = () => {
@@ -40,39 +30,32 @@ function App() {
     setEditMode(false);
   };
 
-  const handleSubmitForm = (activity: Activity) => {
-    if (activity.id) {
-      setActivities(
-        activities.map((x) => (x.id === activity.id ? activity : x))
-      );
-    } else {
-      const newActivity = { ...activity, id: activities.length.toString() };
-      setSelectedActivity(newActivity);
-      setActivities([...activities, newActivity]);
-    }
-    setEditMode(false);
-  };
-
   const handleDelete = (id: string) => {
-    setActivities(activities.filter((x) => x.id !== id));
+    // setActivities(activities!.filter((x) => x.id !== id));
+    console.log(id);
   };
 
   return (
-    <Box sx={{ bgcolor: "#eeeeee" }}>
+    <Box sx={{ bgcolor: "#eeeeee", minHeight: "100vh" }}>
       <CssBaseline />
       <Navbar openForm={handleOpenForm} />
       <Container maxWidth="xl" sx={{ mt: 3 }}>
-        <ActivityDashboard
-          activities={activities}
-          selectActivity={handleSelectActivity}
-          cancelSelectActivity={handleCancelSelectActivity}
-          selectedActivity={selectedActivity ?? undefined}
-          editMode={editMode}
-          openForm={handleOpenForm}
-          closeForm={handleFormClose}
-          submitForm={handleSubmitForm}
-          deleteActivity={handleDelete}
-        />
+        {!activities || isPending ? (
+          <Typography variant="h3" color="primary">
+            Loading activities...
+          </Typography>
+        ) : (
+          <ActivityDashboard
+            activities={activities}
+            selectActivity={handleSelectActivity}
+            cancelSelectActivity={handleCancelSelectActivity}
+            selectedActivity={selectedActivity ?? undefined}
+            editMode={editMode}
+            openForm={handleOpenForm}
+            closeForm={handleFormClose}
+            deleteActivity={handleDelete}
+          />
+        )}
       </Container>
     </Box>
   );
